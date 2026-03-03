@@ -1,0 +1,38 @@
+# Diyagramlar
+
+```json
+{
+  "diagrams": [
+    {
+      "id": "erd_diagram",
+      "name": "E-Ticaret Veritabanı ERD",
+      "type": "erDiagram",
+      "mermaid_code": "erDiagram\n    users {\n        string user_id PK\n        string email\n        string password\n        string first_name\n        string last_name\n        string phone\n        date created_at\n        date updated_at\n        boolean is_active\n    }\n    \n    products {\n        string product_id PK\n        string name\n        text description\n        decimal price\n        int stock_quantity\n        string category_id FK\n        string image_url\n        boolean is_active\n        date created_at\n    }\n    \n    categories {\n        string category_id PK\n        string name\n        text description\n        string parent_id FK\n    }\n    \n    orders {\n        string order_id PK\n        string user_id FK\n        decimal total_amount\n        string status\n        string payment_method\n        string shipping_address\n        date created_at\n        date updated_at\n    }\n    \n    order_items {\n        string item_id PK\n        string order_id FK\n        string product_id FK\n        int quantity\n        decimal unit_price\n        decimal total_price\n    }\n    \n    shopping_cart {\n        string cart_id PK\n        string user_id FK\n        string product_id FK\n        int quantity\n        date added_at\n    }\n    \n    reviews {\n        string review_id PK\n        string user_id FK\n        string product_id FK\n        int rating\n        text comment\n        date created_at\n    }\n    \n    payments {\n        string payment_id PK\n        string order_id FK\n        string payment_method\n        decimal amount\n        string status\n        string transaction_id\n        date created_at\n    }\n    \n    users ||--o{ orders : places\n    users ||--o{ shopping_cart : has\n    users ||--o{ reviews : writes\n    products ||--o{ order_items : contains\n    products ||--o{ shopping_cart : added_to\n    products ||--o{ reviews : receives\n    products }o--|| categories : belongs_to\n    categories ||--o{ categories : parent_child\n    orders ||--o{ order_items : contains\n    orders ||--|| payments : has"
+    },
+    {
+      "id": "system_flowchart",
+      "name": "E-Ticaret Sistem Akış Diyagramı",
+      "type": "flowchart",
+      "mermaid_code": "flowchart TD\n    A[Kullanıcı Giriş] --> B{Giriş Yapmış mı?}\n    B -->|Hayır| C[Kayıt/Giriş Sayfası]\n    B -->|Evet| D[Ana Sayfa]\n    C --> D\n    D --> E[Ürün Katalog]\n    E --> F[Ürün Detay]\n    F --> G{Sepete Ekle?}\n    G -->|Evet| H[Sepete Eklendi]\n    G -->|Hayır| E\n    H --> I[Sepet Görüntüle]\n    I --> J{Ödeme Yap?}\n    J -->|Hayır| E\n    J -->|Evet| K[Ödeme Sayfası]\n    K --> L[Ödeme Bilgileri]\n    L --> M{Ödeme Doğrula}\n    M -->|Başarısız| N[Hata Mesajı]\n    M -->|Başarılı| O[Sipariş Oluştur]\n    N --> K\n    O --> P[Sipariş Onayı]\n    P --> Q[Email Bildirimi]\n    Q --> R[Sipariş Takip]\n    \n    S[Admin Panel] --> T[Ürün Yönetimi]\n    S --> U[Sipariş Yönetimi]\n    S --> V[Kullanıcı Yönetimi]\n    T --> W[Ürün CRUD]\n    U --> X[Sipariş Durumu Güncelle]\n    V --> Y[Kullanıcı Listesi]"
+    },
+    {
+      "id": "payment_sequence",
+      "name": "Ödeme İşlemi Sequence Diyagramı",
+      "type": "sequenceDiagram",
+      "mermaid_code": "sequenceDiagram\n    participant U as Kullanıcı\n    participant F as Frontend\n    participant B as Backend API\n    participant DB as MongoDB\n    participant P as Payment Gateway\n    participant R as Redis Cache\n    \n    U->>F: Sepeti görüntüle\n    F->>B: GET /api/cart/{userId}\n    B->>R: Cache kontrol\n    R-->>B: Cache miss\n    B->>DB: Sepet verilerini getir\n    DB-->>B: Sepet verileri\n    B-->>F: Sepet response\n    F-->>U: Sepet görüntülendi\n    \n    U->>F: Ödeme sayfasına git\n    F->>B: POST /api/checkout/initialize\n    B->>DB: Stok kontrolü\n    DB-->>B: Stok durumu\n    B-->>F: Checkout token\n    F-->>U: Ödeme formu\n    \n    U->>F: Ödeme bilgilerini gir\n    F->>B: POST /api/payment/process\n    B->>P: Ödeme talebini gönder\n    P-->>B: Ödeme durumu\n    \n    alt Ödeme Başarılı\n        B->>DB: Sipariş oluştur\n        DB-->>B: Sipariş ID\n        B->>DB: Stok güncelle\n        B->>R: Sepeti temizle\n        B-->>F: Başarı response\n        F-->>U: Sipariş onayı\n    else Ödeme Başarısız\n        B-->>F: Hata response\n        F-->>U: Ödeme hatası\n    end"
+    },
+    {
+      "id": "c4_context",
+      "name": "E-Ticaret C4 Context Diyagramı",
+      "type": "flowchart",
+      "mermaid_code": "flowchart TD\n    subgraph \"E-Ticaret Sistemi\"\n        A[Web Uygulaması<br/>React.js + Next.js]\n        B[API Gateway<br/>Express.js]\n        C[Ürün Servisi<br/>Node.js]\n        D[Sipariş Servisi<br/>Node.js]\n        E[Kullanıcı Servisi<br/>Node.js]\n        F[Ödeme Servisi<br/>Node.js]\n    end\n    \n    subgraph \"Veri Katmanı\"\n        G[(MongoDB<br/>Ana Veritabanı)]\n        H[(Redis<br/>Cache & Session)]\n    end\n    \n    subgraph \"Dış Servisler\"\n        I[Stripe API<br/>Ödeme Gateway]\n        J[PayPal API<br/>Ödeme Gateway]\n        K[iyzico API<br/>Ödeme Gateway]\n        L[AWS S3<br/>Dosya Depolama]\n        M[CloudFront<br/>CDN]\n    end\n    \n    subgraph \"Monitoring\"\n        N[Google Analytics]\n        O[Sentry<br/>Error Tracking]\n    end\n    \n    subgraph \"Kullanıcılar\"\n        P[Müşteriler]\n        Q[Yöneticiler]\n    end\n    \n    P --> A\n    Q --> A\n    A --> B\n    B --> C\n    B --> D\n    B --> E\n    B --> F\n    C --> G\n    D --> G\n    E --> G\n    F --> G\n    B --> H\n    F --> I\n    F --> J\n    F --> K\n    A --> L\n    A --> M\n    A --> N\n    B --> O"
+    },
+    {
+      "id": "order_state_machine",
+      "name": "Sipariş Durumu State Machine",
+      "type": "stateDiagram-v2",
+      "mermaid_code": "stateDiagram-v2\n    [*] --> Pending : Sipariş Oluşturuldu\n    \n    Pending --> PaymentProcessing : Ödeme Başlatıldı\n    Pending --> Cancelled : Kullanıcı İptal Etti\n    \n    PaymentProcessing --> Paid : Ödeme Başarılı\n    PaymentProcessing --> PaymentFailed : Ödeme Başarısız\n    PaymentProcessing --> Cancelled : Ödeme Zaman Aşımı\n    \n    PaymentFailed --> PaymentProcessing : Tekrar Dene\n    PaymentFailed --> Cancelled : İptal Et\n    \n    Paid --> Processing : Sipariş İşleme Alındı\n    Paid --> Cancelled : Admin İptal Etti\n    \n    Processing --> Shipped : Kargo Verildi\n    Processing --> Cancelled : Stok Problemi\n    \n    Shipped --> InTransit : Kargoda\n    Shipped --> Delivered : Teslim Edildi\n    \n    InTransit --> Delivered : Teslim Edildi\n    InTransit --> ReturnRequested : İade Talebi\n    \n    Delivered --> Completed : Sipariş Tamamlandı\n    Delivered --> ReturnRequested : İade Talebi\n    \n    ReturnRequested --> ReturnApproved : İade Onaylandı\n    ReturnRequested --> ReturnRejected : İade Reddedildi\n    \n    ReturnApproved --> Returned : İade Tamamlandı\n    ReturnRejected --> Delivered : İade Reddedildi\n    \n    Returned --> Refunded : Para İadesi Yapıldı\n    \n    Cancelled --> [*] : Sipariş İptal Edildi\n    Completed --> [*] : Sipariş Başarıyla Tamamlandı\n    Refunded --> [*] : İade Tamamlandı\n    \n    note right of Pending\n        Sipariş oluşturuldu,\n        ödeme bekleniyor\n    end note\n    \n    note right of Processing\n        Ödeme alındı,\n        hazırlanıyor\n    end note\n    \n    note right of Shipped\n        Kargoya verildi,\n        takip numarası var\n    end note"
+    }
+  ]
+}
+```
